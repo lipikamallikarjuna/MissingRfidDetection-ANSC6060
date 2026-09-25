@@ -235,7 +235,7 @@ Once `AnimalId` is recovered, look up that animal's known record closest in `Eve
 | Week 1 | Data inspection, metadata table, profiling report |  Complete |
 | Week 2 | Data cleaning, outlier flagging, rulebook, EDA |  Complete |
 | Week 3 | Exact match, KNN baseline, longitudinal profiling |  In progress |
-| Week 4 | Final model, fill remaining columns, export, write-up |  Upcoming |
+| Week 4 | Final model, fill remaining columns, export, write-up, poster |  Upcoming |
 
 ### Detailed Week 3–4 plan
 - [x] Exact match phase (47,781 resolved)
@@ -247,7 +247,7 @@ Once `AnimalId` is recovered, look up that animal's known record closest in `Eve
 - [ ] Apply to 1.7M missing rows
 - [ ] Fill LactationNumber, DaysInMilk, ReproductionStatus
 - [ ] Export final dataset
-- [ ] Write project report
+- [ ] Create Poster
 
 ---
 
@@ -270,4 +270,4 @@ MIT License — see `LICENSE` file.
 
 ---
 
-*Project by: [Your Name] | ANSC 4040 | Google Colab | 2024*
+*Project by: Lipika Mallikarjuna | ANSC 4040 | Google Colab | 2026*
