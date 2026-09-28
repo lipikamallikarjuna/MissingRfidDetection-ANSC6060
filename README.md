@@ -176,8 +176,7 @@ Final dataset: 0 missing AnimalId rows
 - `Flow3060_IsZero` — possible slow let-down, kept pending investigation
 
 ### Key finding during cleaning
-Missingness is **not random**. Approximately 700 animals per day consistently have no identifier recorded — a stable 20% of the active herd on any given date. This pattern persisted across all 830 unique dates in the dataset, pointing to a systematic RFID scanner failure rather than individual tag loss events.
-
+Missingness is **not random**. Approximately 700 animals per day consistently have no identifier recorded — a stable 20% of the active herd on any given date. This pattern persisted across all 830 unique dates in the dataset.
 ---
 
 ## Modelling Strategy (methodology may change)
@@ -220,11 +219,9 @@ Once `AnimalId` is recovered, look up that animal's known record closest in `Eve
 
 | Split | Size | Purpose |
 |---|---|---|
-| Train | 90% of df_known | Build KNN index |
-| Validation | 10% of df_known (capped 30K) | Tune K, report accuracy |
-| "Test" | df_missing (1.7M rows) | Final prediction — no ground truth |
-
-**Note:** A traditional held-out test set with ground truth does not exist for the missing rows — by definition their true AnimalId is unknown. The validation set on known rows is therefore the primary performance metric. Validation is stratified by animal (10% per animal) to ensure all 9,087 animals are represented in training.
+| Train | 70% of df_known | Build KNN index |
+| Validation | 15% of df_known | Tune K, report accuracy |
+| Test | 15% of df_known | Final prediction |
 
 ---
 
@@ -242,12 +239,12 @@ Once `AnimalId` is recovered, look up that animal's known record closest in `Eve
 - [x] Global KNN baseline (2% accuracy — documented as finding)
 - [x] Date-windowed KNN (2% accuracy — documented as finding)
 - [x] CV analysis → confirmed yield is stable fingerprint (CV 8.9%)
-- [ ] Longitudinal profile KNN validation
-- [ ] K tuning
-- [ ] Apply to 1.7M missing rows
-- [ ] Fill LactationNumber, DaysInMilk, ReproductionStatus
-- [ ] Export final dataset
-- [ ] Create Poster
+- [ ] Longitudinal profile KNN validation (in-progress)
+- [ ] K tuning (in-progress)
+- [ ] Apply to 1.7M missing rows (in-progress)
+- [ ] Fill LactationNumber, DaysInMilk, ReproductionStatus (in-progress)
+- [ ] Export final dataset (not yet started)
+- [ ] Create Poster (not yet started)
 
 ---
 
