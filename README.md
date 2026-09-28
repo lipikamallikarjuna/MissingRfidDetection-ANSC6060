@@ -1,6 +1,6 @@
 # Dairy Farm Animal ID Recovery — ANSC 6060 Mini Project
 
-> Recovering missing animal identifiers from automated milking system records using machine learning.
+> Recovering missing animal identifiers from automated milking system records using unsupervised machine learning.
 
 ---
 
@@ -13,9 +13,9 @@
 - [Data Lineage](#data-lineage)
 - [Data Cleaning Strategy](#data-cleaning-strategy)
 - [Modelling Strategy](#modelling-strategy)
-- [Train / Validation / Test Split](#train--validation--test-split)
+- [Results](#results)
+- [Limitations](#limitations)
 - [Timeline](#timeline)
-- [Results & Findings](#results--findings)
 
 ---
 
@@ -30,196 +30,241 @@ Automated Milking Systems (AMS) on dairy farms record detailed per-session milki
 | Fact | Value |
 |---|---|
 | Total records | 8,495,421 |
-| Records with missing AnimalId | 1,701,003 (20.02%) |
+| Records with missing AnimalId | 1,701,003 (20.0%) |
 | Unique known animals | 9,087 |
 | Date range | 2019-06-14 to 2021-10-24 |
-| Milking sessions per day | 3 (probably morning, midday, evening) |
+| Milking sessions per day | 3 (probably: morning, midday, evening) |
+| Estimated ghost animals | 683 |
 
 ### Why records go missing
-In commercial dairy operations, cows are identified at the milking robot by an RFID tag attached to their ear or leg. If the tag falls off, is damaged, or fails to scan, the milking system still records all sensor measurements (yield, flow rate, duration) but cannot attach an animal identifier. Approximately 700 animals per day are affected consistently throughout the dataset.
+In commercial dairy operations, cows are identified at the milking robot by an RFID tag attached to their ear or leg. If the tag falls off, is damaged, or fails to scan, the milking system still records all sensor measurements (yield, flow rate, duration) but cannot attach an animal identifier. This is the **dropped RFID tag problem**.
+
+Analysis revealed the missingness is **not random** — approximately 683 animals appear on every single date with no identifier recorded, a stable 20% of the active herd across all 830 unique dates.
 
 ### Why this matters
-Without AnimalId, records cannot be linked to:
-- Lactation history (`LactationNumber`)
-- Reproductive status (`ReproductionStatus`)
-- Days in milk (`DaysInMilk`)
-
-Recovering the identifier restores the full record and enables downstream analysis of animal health, productivity trends, and herd management decisions.
+Without AnimalId, records cannot be linked to lactation history, reproductive status, or days in milk — making them unusable for herd management decisions and productivity analysis.
 
 ---
 
 ## Repository Structure
 
 ```
-ANSC4040-MiniProject/
-│
-├── data/                          # ← gitignored (see .gitignore)
-│   └── Data_set_prep_assignment_1.csv
+ANSC4040-AnimalIDRecovery/
 │
 ├── notebooks/
-│   ├── 01_MetaDataRulebook.ipynb      # metadata + rulebook creation
-│   ├── 02_DataCleaning.ipynb          # cleaning, flagging, EDA
-│   └── 03_AnimalID_Recovery.ipynb     # modelling pipeline
+│   └── DataAnalysis_Modeling.ipynb    # single notebook: EDA, cleaning, modelling
 │
-├── outputs/
-│   ├── MiniProjectRulebook.xlsx       # domain rulebook (gitignored)
-│   └── DairyFarmData_ProfileReport.html
+├── data/                              # ← gitignored, not shared publicly
+│   └── Data_set_prep_assignment_1.csv # original source (read-only in code)
+│
+├── outputs/                           
+│   ├── AnimalIDRecovered.csv          # final recovered dataset, ← gitignored
+│   └── MiniProjectRuleBook&MetaData.xlsx
 │
 ├── .gitignore
 ├── LICENSE
-└── README.md                          # ← this file
+└── README.md
 ```
+
+> **Data privacy:** The dataset contains hashed animal identifiers and commercial farm data. Raw and processed data files are excluded from this repository via `.gitignore`.
 
 ---
 
 ## Naming Conventions
 
-### Files
-- Notebooks prefixed with two-digit index: `01_`, `02_`, `03_`
-- Snake_case for all filenames: `animal_id_recovery.ipynb`
-- Outputs include PascalCase descriptor: `MiniProjectRulebook.xlsx`
+### Python variables
+PascalCase throughout — no snake_case, no ALL_CAPS constants.
 
-### Variables (Python)
 | Pattern | Example | Used for |
 |---|---|---|
-| `df_` prefix | `df_known`, `df_missing`, `df_master` | DataFrames |
-| `UPPER_CASE` | `FEATURES`, `WINDOW_DAYS`, `K` | Constants |
-| `_path` suffix | `data_file_path`, `output_file_path` | File paths |
-| `n_` prefix | `n_dupes`, `n_total` | Counts |
-| `_flag` suffix | `AvgFlow_IsZero`, `Duration_Over600s` | Boolean flag columns |
-| `_KNN` suffix | `AnimalId_KNN` | Model-predicted columns |
-| `_Filled` suffix | `LactationNumber_Filled` | Imputed columns |
-| `_Recovered` suffix | `AnimalId_Recovered` | Final recovered columns |
+| `Df` prefix | `DfKnown`, `DfMissing`, `DfMaster` | DataFrames |
+| Descriptive suffix | `ClusterFeatures`, `MatchCols` | Lists and configs |
+| `Scaler` prefix | `ScalerCluster` | Sklearn scalers |
+| `Nn` prefix | `NnInitial`, `NnExtended` | NearestNeighbors objects |
+| `X` prefix | `XMissingScaled`, `XKnownProfiles` | Feature matrices |
+| No underscores in column names | `AnimalIdRecovered`, `LactationNumberFilled` | DataFrame columns |
 
-### Column naming
-- PascalCase with unit appended: `TotalMilkYieldSessionKg`, `MilkingDurationSeconds`
-- Original names renamed on load for clarity (see notebook 01)
-
-### Git branches
-- `main` — stable, submitted version
-- `dev` — active development
-- `feature/model-name` — experimental model branches
+### Files
+- Notebooks: `PascalCase.ipynb`
+- Outputs: descriptive names, no spaces — `AnimalIDRecovered.csv`
+- Excel: `MiniProjectRuleBook&MetaData.xlsx`
 
 ---
 
 ## Environment & Tools
 
-| Component | Choice | Reason |
-|---|---|---|
-| IDE | Google Colab | Cloud GPU/CPU, no local setup, shareable |
-| Storage | Google Drive (`/content/drive/MyDrive/MiniProject`) | Persistent across Colab sessions |
-| Language | Python 3.13 | Standard for data science |
-| Key libraries | pandas, numpy, scikit-learn, ydata-profiling, matplotlib | Industry standard |
-| Version control | GitHub (public repo) | Required by assignment |
-
-### Why Colab over local
-- Dataset is 8.5M rows — Colab's 12GB RAM handles it without memory issues on a local machine
-- No environment setup required across different machines
-- Easy to share and reproduce results
+| Component | Choice |
+|---|---|
+| IDE | Google Colab (cloud, no local setup) |
+| Storage | Google Drive (`/content/drive/MyDrive/MiniProject`) |
+| Language | Python 3.13 |
+| Key libraries | pandas, numpy, scikit-learn, ydata-profiling |
+| Version control | GitHub (public repo, data excluded) |
 
 ---
 
 ## Data Lineage
 
 ```
-Raw CSV (8,495,421 rows × 11 columns)
+Raw CSV — Data_set_prep_assignment_1.csv (8,495,421 rows × 11 columns)
+    │  READ ONLY — never modified
     │
     ▼
-01_MetaDataRulebook.ipynb (done)
-    │  • Column renaming (6 columns)
-    │  • EventDate parsed to datetime
-    │  • Metadata table generated
-    │  • Domain rulebook created (ValidMin, ValidMax, OutlierMethod, flags)
-    │  • Saved: MiniProjectRulebook.xlsx
+DataAnalysis_Modeling.ipynb
     │
-    ▼
-02_DataCleaning.ipynb (done)
-    │  • Data quality audit (missing, zeros, negatives, invalid)
-    │  • Missingness pattern confirmed: block-missing (all 4 ID columns together)
-    │  • Outlier flagging: IQR fences + domain hard rules (16 flag columns)
-    │  • Rows dropped from known only (581 rows):
-    │      - AvgFlow_IsZero (215 rows)
-    │      - Duration_Over600s (194 rows)  
-    │      - AverageMilkFlowKgPerMin missing (172 rows)
-    │  • Duplicate removal (known rows only)
-    │  • Split: df_known (6,794,418) + df_missing (1,701,003)
-    │  • Saved: Data_set_prep_assignment_1.csv (overwrite)
+    ├── Load & rename (6 columns renamed for clarity)
+    ├── Parse EventDate to datetime
     │
-    ▼
-03_AnimalID_Recovery.ipynb (in-process, methodology may change)
-    │  • Phase 1: Exact match (47,781 resolved, 2.8%)
-    │  • Phase 2: Longitudinal profile KNN (1,653,222 rows)
-    │  • Phase 3: Fill LactationNumber, DaysInMilk, ReproductionStatus
-    │  • Saved: final dataset (overwrite)
-    ▼
-Final dataset: 0 missing AnimalId rows
+    ├── Rulebook & Metadata → MiniProjectRuleBook&MetaData.xlsx
+    │     Domain rules, valid ranges, outlier methods per column
+    │
+    ├── Data Quality Audit
+    │     Missing %, negatives, zeros, invalid sessions, date range
+    │
+    ├── Missingness Pattern Analysis
+    │     Confirmed: AnimalId, LactationNumber, DaysInMilk,
+    │     ReproductionStatus always missing together (block missingness)
+    │
+    ├── Outlier Flagging (IQR + domain rules)
+    │     16 flag columns added — used as features, not for dropping
+    │
+    ├── Data Cleaning (known rows only — missing rows never touched)
+    │     Dropped: AvgFlowIsZero (215), DurationOver600s (194),
+    │              AverageMilkFlowKgPerMin missing (172)
+    │     Removed duplicates (same animal, date, session, measurements)
+    │
+    ├── Phase 1 — Exact Match
+    │     Key: EventDate + MilkingSession + TotalMilkYieldSessionKg
+    │     Resolved: 47,781 records (2.8%)
+    │
+    ├── Ghost Animal Discovery
+    │     683 × 3 × 830 = 1,700,670 ≈ 1,701,003 actual missing (100% match)
+    │     Same 683 animals missing every day — systematic scanner failure
+    │
+    ├── Phase 2 — MiniBatchKMeans Clustering
+    │     Clustered 1,700,962 missing records into 683 clusters
+    │     Mean cluster size: 2,490 records (= 830 days × 3 sessions ✓)
+    │     Matched each centroid to nearest known animal profile
+    │     Resolved: 1,653,181 records (97.2%)
+    │
+    ├── Phase 3 — Fill Identifier Columns
+    │     LactationNumber, DaysInMilk, ReproductionStatus filled
+    │     via nearest-date merge_asof per recovered animal
+    │
+    └── Output → AnimalIDRecovered.csv (8,438,367 rows)
 ```
 
 ---
 
 ## Data Cleaning Strategy
 
-### What was cleaned
-| Issue | Action | Rows affected |
+### Dropped rows (known data only — missing rows never dropped)
+
+| Reason | Count |
+|---|---|
+| AverageMilkFlowKgPerMin = 0 (sensor error) | 215 |
+| MilkingDurationSeconds > 600s (logging error) | 194 |
+| AverageMilkFlowKgPerMin missing | 172 |
+| Exact duplicates (same animal, date, session, measurements) | TBD on rerun |
+
+### Kept as model features (not dropped)
+- `DaysInMilkOver350` — late lactation cows, real biology
+- `DurationUnder150s` — fast milking, correlates with late lactation
+- `TotalMilkYieldSessionKgIQRHigh` — high producers
+- `Flow30To60IsZero` — possible slow let-down
+
+### Key finding
+Missingness is a clean block — all 4 identifier columns (`AnimalId`, `LactationNumber`, `DaysInMilk`, `ReproductionStatus`) are always missing together. Only 4 partial-missing rows exist in 8.5M records.
+
+---
+
+## Modelling Strategy
+
+### Why not KNN?
+Initial attempts using K-Nearest Neighbours (global and date-windowed) achieved ~2% accuracy. The feature distributions of known and missing rows are nearly identical — individual milking records are not distinctive enough to identify one cow among thousands with similar production levels.
+
+### The breakthrough: ghost animal discovery
+Mathematical analysis revealed that exactly 683 ghost animals × 3 sessions × 830 days = 1,700,670 ≈ 1,701,003 actual missing records (100% match). The same fixed group of 683 animals appears on every date with no identifier. This changed the problem from classification to clustering.
+
+### Pipeline
+
+**Phase 1 — Exact Match (deterministic)**
+Match missing rows to known animals on `EventDate + MilkingSession + TotalMilkYieldSessionKg`. Only assign where the match is unique. Resolved 47,781 records (2.8%) with 100% confidence.
+
+**Phase 2 — MiniBatchKMeans Clustering**
+- Cluster all 1,700,962 missing records (with complete features) into exactly 683 clusters
+- Each cluster represents one ghost animal's complete milking history
+- Mean cluster size: 2,490 records = 830 days × 3 sessions ✓
+- Match each cluster centroid to the nearest known animal profile using Euclidean distance on 5 scaled milking features
+- Greedy deduplication with 50 nearest neighbours ensures unique animal assignment per cluster
+- 41 rows missing `AverageMilkFlowKgPerMin` assigned via median imputation + nearest centroid
+
+**Phase 3 — Fill identifier columns**
+Once `AnimalId` is recovered, fill `LactationNumber`, `DaysInMilk`, and `ReproductionStatus` by nearest-date lookup from the known records of the assigned animal using `pd.merge_asof`.
+
+### Features used for clustering
+- `TotalMilkYieldSessionKg`
+- `MilkingDurationSeconds`
+- `AverageMilkFlowKgPerMin`
+- `MilkFlow30To60SecondsKgPerMin`
+- `MilkYieldFirst2MinutesKg`
+
+All features standardised with `StandardScaler` before clustering and distance computation.
+
+---
+
+## Results
+
+### Recovery summary
+
+| Method | Records | Percentage |
 |---|---|---|
-| Zero average milk flow | Dropped (known rows only) | 215 |
-| Session duration >600s | Dropped (known rows only) | 194 |
-| AverageMilkFlowKgPerMin missing | Dropped (known rows only) | 172 |
-| Exact duplicate records | Dropped (keep first) | TBD |
-| Missing AnimalId block | **Protected — never dropped** | 1,701,003 |
+| Exact Match | 47,781 | 2.8% |
+| Clustering | 1,653,181 | 97.2% |
+| Clustering (imputed flow) | 41 | 0.0% |
+| **Total recovered** | **1,700,836** | **99.99%** |
+| Remaining null | 167 | 0.01% |
 
-### What was flagged but kept (model features)
-- `DaysInMilk_Over350` — late lactation cows, real biology
-- `Duration_Under150s` — fast milking, correlates with late lactation
-- `TotalMilkYieldSessionKg_IQR_High` — high producers
-- `MilkingDurationSeconds_IQR_High` — long sessions
-- `Flow3060_IsZero` — possible slow let-down, kept pending investigation
+### Clustering validation
 
-### Key finding during cleaning
-Missingness is **not random**. Approximately 700 animals per day consistently have no identifier recorded — a stable 20% of the active herd on any given date. This pattern persisted across all 830 unique dates in the dataset.
----
+| Metric | Value |
+|---|---|
+| Target clusters | 683 |
+| Clusters created | 683 |
+| Mean cluster size | 2,490 records |
+| Expected (830×3) | 2,490 records ✓ |
+| Median match distance | 0.163 (low = centroids close to known profiles) |
+| Unique animals assigned | 682 / 683 |
 
-## Modelling Strategy (methodology may change)
+### Sanity checks
 
-### Approach evolution
-Initial attempts at single-record KNN (global and date-windowed) achieved only ~2% validation accuracy. Investigation revealed that individual milking records are not distinctive enough to identify cows — two cows with similar production levels look identical in a single session.
+| Check | Result |
+|---|---|
+| Null identifiers in recovered | 167 (0.01%) |
+| Recovered IDs outside known set | 0 ✓ |
+| Session distribution preserved | ✓ |
+| Invalid LactationNumber | 167 (same 167 null rows) |
+| Invalid ReproductionStatus | 167 (same 167 null rows) |
+| Yield distribution match (mean) | Known 13.93 vs Recovered 13.93 ✓ |
 
-The solution is **longitudinal profile matching**: a cow's rolling average yield over 7 days has a coefficient of variation of only 8.9%, making it a stable fingerprint when compared against the same animal's known profile.
+### Yield distribution (known vs recovered)
 
-### Phase 1 — Exact Match (deterministic)
-- Match key: `EventDate + MilkingSession + TotalMilkYieldSessionKg`
-- Only assign where the match is unique (one candidate animal)
-- Result: 47,781 records resolved (2.8%)
-- Confidence: 100% — no model uncertainty
-
-### Phase 2 — Longitudinal Profile KNN
-- Build 7-day rolling mean profile per animal per feature
-- Features: `TotalMilkYieldSessionKg`, `MilkingDurationSeconds`, `AverageMilkFlowKgPerMin`, `MilkFlow30To60SecondsKgPerMin`, `MilkYieldFirst2MinutesKg`
-- Date window: ±15 days (candidates must have been recently active)
-- Standardise features with `StandardScaler` before distance computation
-- K=5 (tuned across K=1,3,5,10,15)
-- Confidence score: proportion of K neighbours agreeing
-- Output: `AnimalId_KNN` + `KNN_Confidence`
-
-### Why KNN
-- No assumption about distribution of milking features
-- Naturally handles the multi-class problem (9,087 classes)
-- Interpretable: nearest neighbours can be inspected
-- Longitudinal profiles reduce within-animal variance (CV 8.9%) making distances meaningful
-
-### Phase 3 — Fill remaining identifier columns
-Once `AnimalId` is recovered, look up that animal's known record closest in `EventDate` and fill:
-- `LactationNumber` — from nearest known record
-- `DaysInMilk` — from nearest known record
-- `ReproductionStatus` — modal value within ±30 days
+| Statistic | Known | Recovered |
+|---|---|---|
+| Mean | 13.93 kg | 13.93 kg |
+| Std | 3.64 kg | 3.65 kg |
+| Min | 5.03 kg | 5.03 kg |
+| Median | 13.74 kg | 13.74 kg |
+| Max | 54.84 kg | 53.98 kg |
 
 ---
 
-Train / Validation / Test Split
-Split |Size	| Purpose
-Train | 90% of df_known | Build KNN index
-Validation | 10% of df_known (capped 30K) | Tune K, report accuracy
-"Test" | df_missing (1.7M rows) | Final prediction
+## Limitations
+
+- **682 of 683 unique animal assignments** — one cluster could not be uniquely resolved within the top 50 nearest profiles, resulting in one animal assigned to two clusters.
+- **167 unfilled identifier rows** — rows where the recovered animal has no known records close enough in date for `merge_asof` to fill from. These remain null in the final dataset.
+- **No ground truth** — because the true AnimalId for missing rows is genuinely unknown, the recovery accuracy cannot be directly verified. Validation relies on mathematical consistency (cluster size = 830×3), yield distribution matching, and domain sanity checks.
+- **Unique animals in recovered: 682 not 683** — the scattering of 6,602 unique IDs seen in sanity check 2 reflects that the dedup greedy assignment reached 682 unique animals rather than 683.
 
 ---
 
@@ -227,35 +272,10 @@ Validation | 10% of df_known (capped 30K) | Tune K, report accuracy
 
 | Week | Task | Status |
 |---|---|---|
-| Week 1 | Data inspection, metadata table, profiling report |  Complete |
-| Week 2 | Data cleaning, outlier flagging, rulebook, EDA |  Complete |
-| Week 3 | Exact match, KNN baseline, longitudinal profiling |  In progress |
-| Week 4 | Final model, fill remaining columns, export, write-up, poster |  Upcoming |
-
-### Detailed Week 3–4 plan
-- [x] Exact match phase (47,781 resolved)
-- [x] Global KNN baseline (2% accuracy — documented as finding)
-- [x] Date-windowed KNN (2% accuracy — documented as finding)
-- [x] CV analysis → confirmed yield is stable fingerprint (CV 8.9%)
-- [ ] Longitudinal profile KNN validation (in-progress)
-- [ ] K tuning (in-progress)
-- [ ] Apply to 1.7M missing rows (in-progress)
-- [ ] Fill LactationNumber, DaysInMilk, ReproductionStatus (in-progress)
-- [ ] Export final dataset (not yet started)
-- [ ] Create Poster (not yet started)
-
----
-
-## Results & Findings
-
-| Finding | Detail |
-|---|---|
-| Missingness type | Systematic, not random — same ~700 animals missing daily |
-| Cause | Likely RFID tag scanner failure for a fixed group of animals |
-| Single-record KNN accuracy | ~2% — features not distinctive at record level |
-| Yield CV (7-day rolling) | 8.9% — yield IS a stable longitudinal fingerprint |
-| Exact match resolution | 47,781 records (2.8%) resolved with 100% confidence |
-| Profile KNN accuracy | TBD — in progress |
+| Week 1 | Data inspection, metadata, profiling report | ✅ Complete |
+| Week 2 | Data cleaning, outlier flagging, rulebook, EDA | ✅ Complete |
+| Week 3 | Exact match, KNN baseline, ghost animal discovery, clustering | ✅ Complete |
+| Week 4 | Poster, final notebook clean-up, GitHub submission | 🔲 In progress |
 
 ---
 
@@ -265,4 +285,4 @@ MIT License — see `LICENSE` file.
 
 ---
 
-*Project by: Lipika Mallikarjuna | ANSC 4040 | Google Colab | 2026*
+*ANSC 4040 Mini Project · Google Colab · 2024*
