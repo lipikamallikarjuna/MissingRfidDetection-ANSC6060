@@ -33,10 +33,10 @@ Automated Milking Systems (AMS) on dairy farms record detailed per-session milki
 | Records with missing AnimalId | 1,701,003 (20.02%) |
 | Unique known animals | 9,087 |
 | Date range | 2019-06-14 to 2021-10-24 |
-| Milking sessions per day | 3 (morning, midday, evening) |
+| Milking sessions per day | 3 (probably morning, midday, evening) |
 
 ### Why records go missing
-In commercial dairy operations, cows are identified at the milking robot by an RFID tag attached to their ear or leg. If the tag falls off, is damaged, or fails to scan, the milking system still records all sensor measurements (yield, flow rate, duration) but cannot attach an animal identifier. This is the **dropped RFID tag problem**. Approximately 700 animals per day are affected consistently throughout the dataset.
+In commercial dairy operations, cows are identified at the milking robot by an RFID tag attached to their ear or leg. If the tag falls off, is damaged, or fails to scan, the milking system still records all sensor measurements (yield, flow rate, duration) but cannot attach an animal identifier. Approximately 700 animals per day are affected consistently throughout the dataset.
 
 ### Why this matters
 Without AnimalId, records cannot be linked to:
@@ -77,7 +77,7 @@ ANSC4040-MiniProject/
 ### Files
 - Notebooks prefixed with two-digit index: `01_`, `02_`, `03_`
 - Snake_case for all filenames: `animal_id_recovery.ipynb`
-- Outputs include descriptor: `MiniProjectRulebook.xlsx`
+- Outputs include PascalCase descriptor: `MiniProjectRulebook.xlsx`
 
 ### Variables (Python)
 | Pattern | Example | Used for |
@@ -125,7 +125,7 @@ ANSC4040-MiniProject/
 Raw CSV (8,495,421 rows × 11 columns)
     │
     ▼
-01_MetaDataRulebook.ipynb
+01_MetaDataRulebook.ipynb (done)
     │  • Column renaming (6 columns)
     │  • EventDate parsed to datetime
     │  • Metadata table generated
@@ -133,7 +133,7 @@ Raw CSV (8,495,421 rows × 11 columns)
     │  • Saved: MiniProjectRulebook.xlsx
     │
     ▼
-02_DataCleaning.ipynb
+02_DataCleaning.ipynb (done)
     │  • Data quality audit (missing, zeros, negatives, invalid)
     │  • Missingness pattern confirmed: block-missing (all 4 ID columns together)
     │  • Outlier flagging: IQR fences + domain hard rules (16 flag columns)
@@ -146,7 +146,7 @@ Raw CSV (8,495,421 rows × 11 columns)
     │  • Saved: Data_set_prep_assignment_1.csv (overwrite)
     │
     ▼
-03_AnimalID_Recovery.ipynb
+03_AnimalID_Recovery.ipynb (in-process, methodology may change)
     │  • Phase 1: Exact match (47,781 resolved, 2.8%)
     │  • Phase 2: Longitudinal profile KNN (1,653,222 rows)
     │  • Phase 3: Fill LactationNumber, DaysInMilk, ReproductionStatus
@@ -180,7 +180,7 @@ Missingness is **not random**. Approximately 700 animals per day consistently ha
 
 ---
 
-## Modelling Strategy
+## Modelling Strategy (methodology may change)
 
 ### Approach evolution
 Initial attempts at single-record KNN (global and date-windowed) achieved only ~2% validation accuracy. Investigation revealed that individual milking records are not distinctive enough to identify cows — two cows with similar production levels look identical in a single session.
