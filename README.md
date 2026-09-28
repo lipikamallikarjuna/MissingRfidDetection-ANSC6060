@@ -263,7 +263,6 @@ All features standardised with `StandardScaler` before clustering and distance c
 
 - **682 of 683 unique animal assignments** — one cluster could not be uniquely resolved within the top 50 nearest profiles, resulting in one animal assigned to two clusters.
 - **167 unfilled identifier rows** — rows where the recovered animal has no known records close enough in date for `merge_asof` to fill from. These remain null in the final dataset.
-- **No ground truth** — because the true AnimalId for missing rows is genuinely unknown, the recovery accuracy cannot be directly verified. Validation relies on mathematical consistency (cluster size = 830×3), yield distribution matching, and domain sanity checks.
 - **Unique animals in recovered: 682 not 683** — the scattering of 6,602 unique IDs seen in sanity check 2 reflects that the dedup greedy assignment reached 682 unique animals rather than 683.
 
 ---
@@ -272,10 +271,10 @@ All features standardised with `StandardScaler` before clustering and distance c
 
 | Week | Task | Status |
 |---|---|---|
-| Week 1 | Data inspection, metadata, profiling report | ✅ Complete |
-| Week 2 | Data cleaning, outlier flagging, rulebook, EDA | ✅ Complete |
-| Week 3 | Exact match, KNN baseline, ghost animal discovery, clustering | ✅ Complete |
-| Week 4 | Poster, final notebook clean-up, GitHub submission | 🔲 In progress |
+| Week 1 | Data inspection, metadata, profiling report | Complete |
+| Week 2 | Data cleaning, outlier flagging, rulebook, EDA | Complete |
+| Week 3 | Exact match, KNN baseline, ghost animal discovery, clustering | Complete |
+| Week 4 | Poster, final notebook clean-up, GitHub submission | In progress |
 
 ---
 
@@ -285,4 +284,4 @@ MIT License — see `LICENSE` file.
 
 ---
 
-*ANSC 4040 Mini Project · Google Colab · 2024*
+*ANSC 6060 Mini Project · Google Colab · 2026*
