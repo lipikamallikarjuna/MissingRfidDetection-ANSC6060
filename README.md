@@ -215,13 +215,11 @@ Once `AnimalId` is recovered, look up that animal's known record closest in `Eve
 
 ---
 
-## Train / Validation / Test Split
-
-| Split | Size | Purpose |
-|---|---|---|
-| Train | 70% of df_known | Build KNN index |
-| Validation | 15% of df_known | Tune K, report accuracy |
-| Test | 15% of df_known | Final prediction |
+Train / Validation / Test Split
+Split |Size	| Purpose
+Train | 90% of df_known | Build KNN index
+Validation | 10% of df_known (capped 30K) | Tune K, report accuracy
+"Test" | df_missing (1.7M rows) | Final prediction
 
 ---
 
