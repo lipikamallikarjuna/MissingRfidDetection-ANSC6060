@@ -139,7 +139,7 @@ DataAnalysis_Modeling.ipynb
     │
     ├── Ghost Animal Discovery
     │     683 × 3 × 830 = 1,700,670 ≈ 1,701,003 actual missing (100% match)
-    │     Same 683 animals missing every day — systematic scanner failure
+    │     Same 683 animals missing every day
     │
     ├── Phase 2 — MiniBatchKMeans Clustering
     │     Clustered 1,700,962 missing records into 683 clusters
@@ -150,7 +150,8 @@ DataAnalysis_Modeling.ipynb
     ├── Phase 3 — Fill Identifier Columns
     │     LactationNumber, DaysInMilk, ReproductionStatus filled
     │     via nearest-date merge_asof per recovered animal
-    │
+    │ 
+    ├── 2nd Model - DWT - Inprogress.
     └── Output → AnimalIDRecovered.csv (8,438,367 rows)
 ```
 
