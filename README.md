@@ -86,7 +86,7 @@ ANSC4040-AnimalIDRecovery/
 ## Naming Conventions
 
 ### Python variables
-PascalCase throughout — no snake_case, no ALL_CAPS constants.
+PascalCase throughout
 
 | Pattern | Example | Used for |
 |---|---|---|
@@ -176,7 +176,7 @@ DataAnalysis_Modeling.ipynb
 
 ## Data Cleaning Strategy
 
-### Dropped rows (known data only — missing rows never dropped)
+### Dropped rows (known data only — missing rows were not dropped)
 
 | Reason | Count |
 |---|---|
@@ -192,7 +192,7 @@ DataAnalysis_Modeling.ipynb
 - `Flow30To60IsZero` — possible slow let-down
 
 ### Key finding
-Missingness is a clean block — all 4 identifier columns are always missing together. Mean yield of known and missing records is identical (13.93 kg), confirming random tag failure rather than systematic bias.
+Missingness is a clean block — all 4 identifier columns are always missing together. Mean yield of known and missing records is identical (13.93 kg)
 
 ---
 
@@ -200,7 +200,7 @@ Missingness is a clean block — all 4 identifier columns are always missing tog
 
 | Discovery | Finding |
 |---|---|
-| Ghost herd structure | ~2,101 rotating animals × 270 days × 3 sessions = 1,701,003 exactly |
+| Ghost herd structure | ~2,101 rotating animals × 270 days × 3 sessions = 1,701,003 exactly, and 683 random animals missing eash day  |
 | Tag loss prevalence | 62% of known animals (5,584) lost their tag at least once |
 | Gap animals confirmed | 4,253 animals disappeared then reappeared with known identity |
 | Calving during gap | 96.8% (4,115/4,253) calved during their gap; 99.8% dates estimable |
@@ -242,7 +242,7 @@ The Hungarian algorithm finds the globally optimal one-to-one assignment across 
 | SGD linear classifier | 0.13% — features don't separate linearly | ❌ Failed |
 | Random Forest (50 animals) | 36.0% (18× random) — proves features discriminative | ⚠️ Can't scale |
 | Random Forest (4,253 animals) | 2.9% (123× random) — can't run at scale | ⚠️ Can't scale |
-| Longitudinal cluster matching | 858,748 records · 99.4% cluster-level validation | ⚠️ Cluster impure |
+| Longitudinal cluster matching | 858,748 records · 99.4% cluster-level validation | ⚠️ Each cluster contains ~3.4 animals mixed — record-level assignment unvalidated |
 | Multi-gap biological fingerprinting | 94.8% animal-level accuracy | ✅ Works |
 | Wood's curve trajectory | 0.014 kg error · 94.7% day coverage | ✅ Works |
 | Greedy trajectory assignment | 411,806 records · 285,675 conflicts | ⚠️ Conflicts |
