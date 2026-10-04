@@ -1,4 +1,4 @@
-# Dairy Farm Animal ID Recovery — ANSC 4040 Mini Project
+# Dairy Farm Animal ID Recovery — ANSC 6060 Mini Project
 
 > Recovering missing animal identifiers from automated milking system records using biological fingerprinting, Wood's lactation curves, and globally optimal assignment.
 
@@ -383,4 +383,4 @@ MIT License — see `LICENSE` file.
 
 ---
 
-*ANSC 4040 Mini Project · Google Colab · 2026*
+*ANSC 6060 Mini Project · Google Colab · 2026*
